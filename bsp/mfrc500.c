@@ -310,12 +310,6 @@ uint8_t Authentication(uint8_t addr, uint8_t *key)
 {	
 	char status = 0;
 
-	/* 选卡1 */
-	memset(respon, 0, 10);
-	status = PcdSelect1(g_cSNR, respon);
-	if( status != MI_OK )
-		return 1;
-
 	/* 认证:转换密钥格式 */
 	status = ChangeCodeKey( key, TransKey );
 	if( status != MI_OK )

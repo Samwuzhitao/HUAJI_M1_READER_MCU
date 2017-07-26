@@ -38,7 +38,8 @@ static uint8_t          re_try_count        = 0;
        uint8_t			    InitKey[16]         = {0xff,0xff,0xff,0xff,0xff,0xff,
 												                       0xff,0x07,0x80,0x69,
 												                       0xff,0xff,0xff,0xff,0xff,0xff};			 
-
+void app_card_timer1_deinit( void );
+void app_card_timer2_deinit( void );
 /******************************************************************************
   Function:rf_set_card_status
   Description:
@@ -71,6 +72,7 @@ void rf_set_card_status( uint8_t new_status, uint8_t mode)
 		card_process_status = 3;
 		find_card_ok = 0;
 	}
+	//printf("rf_set_card_status = %d \r\n",card_process_status);
 }
 
 /******************************************************************************
@@ -172,7 +174,16 @@ void App_card_process(void)
 		{
 			return;
 		}
-
+		
+		/* 选卡1 */
+		memset(respon, 0, 10);
+		status = PcdSelect1(g_cSNR, respon);
+		DEBUG_CARD_DEBUG_LOG("STATUS:PcdSelect1 = %d \r\n",status);
+		if( status != MI_OK )
+		{
+			return;
+		}
+	
 		if( g_uid_len == 4 )
 			rf_set_card_status(2,0);
 		return;
@@ -182,7 +193,7 @@ void App_card_process(void)
 	{
 		uint8_t status = 0;
 		
-		sw_unregister_timer(&card_second_find_timer);
+		app_card_timer1_deinit();
 
 		/* 产生新的秘钥 */
 		create_new_key(g_cSNR,PassWd,NewKey);
@@ -192,9 +203,15 @@ void App_card_process(void)
 		if(( card_task.r_cmd_type == 0x10) || ( card_task.r_cmd_type == 0x13 ))
 		{
 			status = Authentication( key_ctl_addr, DefaultKey );
-			DEBUG_CARD_DEBUG_LOG("Authentication status = %d\r\n",status);
+			DEBUG_CARD_DEBUG_LOG("DefaultKey Authentication status = %d\r\n",status);
 			if( status != MI_OK )
 			{
+				if( card_task.s_cmd_type == 0x10 )
+				{
+					card_task.r_cmd_type = 0x11;
+					rf_set_card_status(1,0);
+					return;
+				}
 				mfrc500_init();
 				rf_set_card_status(1,0);
 				return;
@@ -204,19 +221,27 @@ void App_card_process(void)
 		if(( card_task.r_cmd_type == 0x12 ) || ( card_task.r_cmd_type == 0x11 ))
 		{
 			status = Authentication( key_ctl_addr, PassWd);
-			DEBUG_CARD_DEBUG_LOG("Authentication status = %d\r\n",status);
+			DEBUG_CARD_DEBUG_LOG("PassWd Authentication status = %d\r\n",status);
 			if( status != MI_OK )
 			{
 				uint8_t i;
-				if( card_task.r_cmd_type == 0x12 )
+				if( card_task.s_cmd_type == 0x12 )
 				{
 					card_task.r_cmd_type = 0x10;
 					for( i = 0; i < 16; i++)
 						card_task.wdata[i] = 0x00;
 				}
-				if( card_task.r_cmd_type == 0x11 )
+
+				if( card_task.s_cmd_type == 0x11 )
 					card_task.r_cmd_type = 0x13;
-				
+
+				if((card_task.s_cmd_type == 0x10) && (card_task.r_cmd_type == 0x11))
+				{
+					find_card_ok = 2;
+					rf_set_card_status(3,0);
+					return;
+				}
+
 				mfrc500_init();
 				rf_set_card_status(1,0);
 				return;
@@ -295,6 +320,7 @@ void App_card_process(void)
 
 	if( card_current_status == 3 )
 	{
+		app_card_timer2_deinit();
 	//printf("r_cmd_type = %02x ",card_task.r_cmd_type);
 		if( card_task.s_cmd_type != 0x11 )
 		{
@@ -340,7 +366,7 @@ void App_card_process(void)
 		Deselect();
 		PcdHalt();
 		PcdAntennaOff();
-		rf_set_card_status(0,0);
+		rf_set_card_status(0,1);
 	}
 }
 
@@ -348,10 +374,21 @@ void app_clear_status(void)
 {
 	re_try_count = 0;
 	find_card_ok = 0;
-//printf("Time out!\r\n");
+  //printf("Time out!\r\n");
 }
 
 void app_card_timer_init( void )
 {
-	sw_create_timer(&card_second_find_timer, 200, 1, 3, &(card_process_status), app_clear_status);
+	sw_create_timer(&send_data1_timer, 200, 1, 3, &(card_process_status), app_clear_status);
+	sw_create_timer(&send_data2_timer, 100, 2, 3, &(card_process_status), app_clear_status);
+}
+
+void app_card_timer1_deinit( void )
+{
+	sw_clear_timer(&send_data1_timer);
+}
+
+void app_card_timer2_deinit( void )
+{
+	sw_clear_timer(&send_data2_timer);
 }

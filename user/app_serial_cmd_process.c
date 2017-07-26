@@ -274,7 +274,6 @@ int8_t app_m1_write_data( uart_cmd_typedef *rbuf, uart_cmd_typedef *sbuf )
 
 		/* 启动寻卡状态机 */
 		rf_set_card_status(1,1);
-		app_card_timer_init();
 		return 0;
 	}
 	else
@@ -298,7 +297,6 @@ int8_t app_m1_read_data( uart_cmd_typedef *rbuf, uart_cmd_typedef *sbuf )
 
 		/* 启动寻卡状态机 */
 		rf_set_card_status(1,1);
-		app_card_timer_init();
 		return 0;
 	}
 	else
@@ -322,7 +320,6 @@ int8_t app_m1_clear_data( uart_cmd_typedef *rbuf, uart_cmd_typedef *sbuf )
 
 		/* 启动寻卡状态机 */
 		rf_set_card_status(1,1);
-		app_card_timer_init();
 		return 0;
 	}
 	else

@@ -105,6 +105,7 @@ void board_init(void)
 	sw_timer_init();
 	system_timer_init();
 	beep_ctl_timer_init();
+	app_card_timer_init();
 
 	mfrc500_init();
 
