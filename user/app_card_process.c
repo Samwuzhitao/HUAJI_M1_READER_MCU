@@ -212,6 +212,12 @@ void App_card_process(void)
 					rf_set_card_status(1,0);
 					return;
 				}
+				if(( card_task.s_cmd_type == 0x11 ) && ( card_task.r_cmd_type == 0x13 ))
+				{
+					find_card_ok = 3;
+					rf_set_card_status(3,0);
+					return;
+				}
 				mfrc500_init();
 				rf_set_card_status(1,0);
 				return;
