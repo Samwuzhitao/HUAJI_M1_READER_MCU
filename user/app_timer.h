@@ -81,6 +81,7 @@ void sw_create_timer( Timer_typedef *timer_id, uint32_t delayms, uint8_t statrt_
 void system_timer_init( void );
 void sw_clear_timer( Timer_typedef *timer_id );
 uint8_t sw_unregister_timer( Timer_typedef *timer_id );
+void sw_reset_timer_timeout( Timer_typedef *timer_id , uint16_t timout_status);
 #endif //__DELAY_H_
 /**************************************END OF FILE****************************/
 

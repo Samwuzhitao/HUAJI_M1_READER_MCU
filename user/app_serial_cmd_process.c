@@ -30,6 +30,7 @@ static void app_beep_ctl_process( void );
 
 int8_t app_get_device_info( uart_cmd_typedef *rbuf, uart_cmd_typedef *sbuf );
 void   app_load_program   ( uart_cmd_typedef *rbuf, uart_cmd_typedef *sbuf );
+int8_t app_m1_read_id     ( uart_cmd_typedef *rbuf, uart_cmd_typedef *sbuf );
 int8_t app_m1_write_data  ( uart_cmd_typedef *rbuf, uart_cmd_typedef *sbuf );
 int8_t app_m1_read_data   ( uart_cmd_typedef *rbuf, uart_cmd_typedef *sbuf );
 int8_t app_m1_clear_data  ( uart_cmd_typedef *rbuf, uart_cmd_typedef *sbuf );
@@ -129,6 +130,11 @@ static void serial_r_cmd_process(void)
 			/* 清卡指令 */
 			case 0x12:
 				cmd_s = app_m1_clear_data( &rdata, &sdata );
+			break;
+
+			/* 清卡指令 */
+			case 0x13:
+				cmd_s = app_m1_read_id( &rdata, &sdata );
 			break;
 
 			/* 蜂鸣器操作指令 */
@@ -303,6 +309,24 @@ int8_t app_m1_read_data( uart_cmd_typedef *rbuf, uart_cmd_typedef *sbuf )
 		return -1;
 }
 
+int8_t app_m1_read_id( uart_cmd_typedef *rbuf, uart_cmd_typedef *sbuf )
+{
+	uint8_t i = 0;
+
+	if( rbuf->LEN == 0 )
+	{
+		/* 拷贝指令数据 */
+		memcpy(card_task.sign, rbuf->SIGN, 4);
+		card_task.s_cmd_type = rbuf->TYPE;
+		card_task.r_cmd_type = rbuf->TYPE;
+		/* 启动寻卡状态机 */
+		rf_set_card_status(1,1);
+		return 0;
+	}
+	else
+		return -1;
+}
+
 int8_t app_m1_clear_data( uart_cmd_typedef *rbuf, uart_cmd_typedef *sbuf )
 {
 	uint8_t i = 0;
@@ -339,6 +363,7 @@ int8_t app_beep_ctl( uart_cmd_typedef *rbuf, uart_cmd_typedef *sbuf )
 		sbuf->END = 0xCA;
 
 		beep_s = 1;
+		sw_reset_timer_timeout(&card_buzzer_timer, rbuf->DATA[0]*150);
 		return 0;
 	}
 	else
@@ -354,7 +379,7 @@ int8_t app_beep_ctl( uart_cmd_typedef *rbuf, uart_cmd_typedef *sbuf )
 ******************************************************************************/
 void beep_ctl_timer_init( void )
 {
-	sw_create_timer(&card_buzzer_timer    , 150, 1, 0,&(beep_s), NULL);
+	sw_create_timer(&card_buzzer_timer, 150, 1, 0,&(beep_s), NULL);
 }
 
 static void app_beep_ctl_process( void )

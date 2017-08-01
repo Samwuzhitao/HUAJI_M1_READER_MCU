@@ -327,6 +327,18 @@ void sw_clear_timer( Timer_typedef *timer_id )
 }
 
 /******************************************************************************
+  Function:sw_reset_timer_timeout
+  Description:
+  Input :
+  Return:
+  Others:None
+******************************************************************************/
+void sw_reset_timer_timeout( Timer_typedef *timer_id , uint16_t timeout)
+{
+	timer_id->timeout = timeout;
+}
+
+/******************************************************************************
   Function:send_data_process_timer_init
   Description:
 		系统状态定时器回调函数

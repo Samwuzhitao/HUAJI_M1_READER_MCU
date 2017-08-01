@@ -183,9 +183,17 @@ void App_card_process(void)
 		{
 			return;
 		}
-	
+
 		if( g_uid_len == 4 )
+		{
+			if( card_task.s_cmd_type == 0x13 )
+			{
+				find_card_ok = 1;
+				rf_set_card_status(3,0);
+				return;
+			}
 			rf_set_card_status(2,0);
+		}
 		return;
 	}
 
@@ -350,6 +358,15 @@ void App_card_process(void)
 				memcpy(card_message.DATA+1,RData,16);
 			//debug_show_data( "rd_data ",card_task.addr, RData );
 			}
+		}
+
+		if( card_task.s_cmd_type == 0x13 )
+		{
+			if( find_card_ok == 0 )
+				memset(card_message.DATA,0x00,4);
+			else
+				memcpy(card_message.DATA,g_cSNR,4);
+			card_message.LEN     = 4;
 		}
 
 		card_message.HEADER = 0x5C;
