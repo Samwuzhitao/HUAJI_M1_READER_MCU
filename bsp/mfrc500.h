@@ -25,7 +25,7 @@ void PcdAntennaOn(void);
 void PcdAntennaOff(void);
 uint8_t PcdHalt(void);
 
-void MRC500_DEBUG_START(uint8_t *str);
+void MRC500_DEBUG_START(const char *str);
 void MRC500_DEBUG_END(void);
 
 uint8_t PcdRATS(uint8_t *res, uint8_t *len);

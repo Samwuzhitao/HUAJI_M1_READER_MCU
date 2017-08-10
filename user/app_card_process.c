@@ -146,7 +146,6 @@ void App_card_process(void)
 		#ifdef SHOW_CARD_PROCESS_TIME
 		StartTime = PowerOnTime;
 		#endif
-
 		PcdAntennaOn();
 		memset(g_cardType, 0, 40);
 		/* reqA指令 :请求A卡，返回卡类型，不同类型卡对应不同的UID长度 */
@@ -210,8 +209,10 @@ void App_card_process(void)
 		/* 认证默认秘钥 */
 		if(( card_task.r_cmd_type == 0x10) || ( card_task.r_cmd_type == 0x13 ))
 		{
+			MRC500_DEBUG_START("Authentication:DefaultKey\r\n");
 			status = Authentication( key_ctl_addr, DefaultKey );
-			DEBUG_CARD_DEBUG_LOG("DefaultKey Authentication status = %d\r\n",status);
+			MRC500_DEBUG_END();
+			DEBUG_CARD_DEBUG_LOG("DefaultKey Authentication status = %d ",status);
 			if( status != MI_OK )
 			{
 				if( card_task.s_cmd_type == 0x10 )
@@ -230,11 +231,17 @@ void App_card_process(void)
 				rf_set_card_status(1,0);
 				return;
 			}
+			else
+				DEBUG_CARD_DEBUG_LOG("DefaultKey = %02x %02x %02x %02x %02x %02x\r\n",
+			  DefaultKey[0],DefaultKey[1],DefaultKey[2],DefaultKey[3],DefaultKey[4],DefaultKey[5]);
+				
 		}
 
 		if(( card_task.r_cmd_type == 0x12 ) || ( card_task.r_cmd_type == 0x11 ))
 		{
+			MRC500_DEBUG_START("Authentication:PassWd\r\n");
 			status = Authentication( key_ctl_addr, PassWd);
+			MRC500_DEBUG_END();
 			DEBUG_CARD_DEBUG_LOG("PassWd Authentication status = %d\r\n",status);
 			if( status != MI_OK )
 			{
@@ -260,6 +267,9 @@ void App_card_process(void)
 				rf_set_card_status(1,0);
 				return;
 			}
+			else
+				DEBUG_CARD_DEBUG_LOG("PassWd = %02x %02x %02x %02x %02x %02x\r\n",
+			  PassWd[0],PassWd[1],PassWd[2],PassWd[3],PassWd[4],PassWd[5]);
 		}
 
 		#ifdef SHOW_CARD_PROCESS_TIME
@@ -293,8 +303,8 @@ void App_card_process(void)
 			/* 更新秘钥 */
 			if( card_task.r_cmd_type == 0x10 )
 				status = PcdWrite(key_ctl_addr, NewKey);
-			if( card_task.r_cmd_type == 0x12 )
-				status = PcdWrite(key_ctl_addr, InitKey);
+//			if( card_task.r_cmd_type == 0x12 )
+//				status = PcdWrite(key_ctl_addr, InitKey);
 		//debug_show_data( "new_key ",key_ctl_addr, card_task.wdata );
 			if(status != MI_OK)
 			{

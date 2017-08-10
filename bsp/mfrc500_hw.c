@@ -28,7 +28,7 @@ uint8_t PrintfFlg = 0;
 
 #endif
 
-void MRC500_DEBUG_START(uint8_t *str)
+void MRC500_DEBUG_START(const char *str)
 {
 #ifdef 	ENABLE_MF1702NL_DEBUG_LOG
 	DEBUG_MF1702NL_LOG("%s",str);
